@@ -1,0 +1,15 @@
+# Cursor Rules — fatturafacile-mcp-server
+
+Official Model Context Protocol (MCP) AI Gateway for Fattura Facile ERP.
+Stack: Node.js (LTS), TypeScript (Strict Mode, zero any), pnpm, Zod, Vitest, Playwright, OpenTelemetry, Redis, Docker.
+
+## Critical Invariants
+1. Consult `.ai/rules/index.md`, `.ai/rules/project.md`, and `AGENTS.md` before making any architectural or structural modifications.
+2. OpenAPI Single Source of Truth: All ERP communication MUST go through `fatturafacile-openapi-sdk`. Never create duplicate DTOs, domain models, or direct HTTP calls.
+3. Multi-Tenancy & Security: Every Tool, Resource, Prompt, or Workflow must execute within strict `TenantContext`, `UserContext`, `CompanyContext`, and `PermissionContext`. Zero tenant leakage. Immutable audit trail.
+4. Tool Framework: All MCP Tools extend the unified framework in `src/tools` with Zod validation, RBAC, OpenTelemetry, retries, and Redis caching. Support `stdio`, `streamable-http`, and `sse`.
+5. Strict Module Boundaries: Follow Clean Architecture in `src/{bootstrap,server,transport,auth,security,permissions,audit,telemetry,cache,queue,sdk,services,workflows,orchestration,tools,resources,prompts,schemas,types,validation,errors}`.
+
+## Execution Quality
+- Run `pnpm typecheck`, `pnpm lint`, and `pnpm test` before concluding tasks.
+- Keep diffs focused and minimal. Never leak or modify `.env*` or certificates.

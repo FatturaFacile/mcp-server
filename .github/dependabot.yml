@@ -1,0 +1,31 @@
+version: 2
+updates:
+  # 1. GitHub Actions (to keep CI/CD workflows up to date)
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'Europe/Rome'
+
+  # 2. Node.js (pnpm / npm package manifests)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'Europe/Rome'
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: 'deps'
+
+  # 3. Docker (for base images in Dockerfile)
+  - package-ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'Europe/Rome'

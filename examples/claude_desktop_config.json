@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "fattura-facile": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "MCP_TRANSPORT": "stdio",
+        "FATTURA_FACILE_API_URL": "https://api.fatturafacile.eu",
+        "FATTURA_FACILE_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}

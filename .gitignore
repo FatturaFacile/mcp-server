@@ -1,0 +1,66 @@
+# Dependencies & Package Managers
+/node_modules/
+/.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Compiled & Build Output
+/dist/
+/build/
+/out-tsc/
+*.tsbuildinfo
+
+# Documentation Generator Output (Typedoc)
+/docs/api/
+
+# Testing & Coverage
+/coverage/
+/.vitest/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# Agent Sandboxing & Ephemeral Scratch
+/.sandbox/
+.claude-build/
+.claude/settings.local.json
+.claude/*.local.md
+.claude/worktrees/
+*.tmp
+
+# Secrets & Local Environment Overrides (see .env.example)
+.env
+.env.*
+!.env.example
+auth.json
+/certs/*
+!/certs/README.md
+*.pem
+*.key
+*.pfx
+
+# Local Databases & Logs
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.log
+/logs/
+
+# IDEs & System Files
+.idea/
+.project
+.classpath
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/*
+.DS_Store
+Thumbs.db

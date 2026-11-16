@@ -1,0 +1,31 @@
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fatturafacile-mcp-server
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - MCP_TRANSPORT=streamable-http
+      - PORT=3000
+      - HOST=0.0.0.0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - FATTURA_FACILE_API_URL=https://api.fatturafacile.eu
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: fatturafacile-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

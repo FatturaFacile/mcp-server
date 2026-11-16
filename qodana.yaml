@@ -1,0 +1,26 @@
+version: '1.0'
+
+linter: jetbrains/qodana-js:2026.2
+
+profile:
+  name: qodana.recommended
+
+include:
+  - name: JSUnusedLocalSymbols
+  - name: JSUnusedGlobalSymbols
+  - name: TypeScriptUnresolvedReference
+  - name: TypeScriptValidateTypes
+
+exclude:
+  - name: DuplicatedCode
+
+failureConditions:
+  severityThresholds:
+    critical: 0
+    high: 0
+    moderate: 50
+    low: 150
+
+  testCoverageThresholds:
+    fresh: 80
+    total: 75
