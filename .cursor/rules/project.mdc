@@ -1,0 +1,17 @@
+---
+description: "Core project rules, architecture invariants, and commands for fatturafacile-mcp-server"
+globs: "**/*"
+---
+
+# Project Guidelines — Cursor
+
+Refer to [AGENTS.md](../../AGENTS.md) as the canonical single source of truth for all standards.
+
+- **Stack:** Node.js 22+, TypeScript Strict (zero `any`), Zod, Vitest.
+- **Package Manager:** `pnpm` exclusively.
+- **OpenAPI SSoT:** All ERP interactions must go through `@fatturafacile/openapi-sdk`.
+- **Multi-Tenancy:** Maintain strict context isolation (`tenant`, `user`, `company`, `permissions`).
+- **Validation Commands:**
+  - `pnpm run typecheck`
+  - `pnpm run lint`
+  - `pnpm run test`

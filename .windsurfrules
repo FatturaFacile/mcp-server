@@ -1,0 +1,14 @@
+# Windsurf Rules — fatturafacile-mcp-server
+
+Refer to [AGENTS.md](AGENTS.md) for canonical architectural standards, project layout, and verification commands.
+
+## Key Directives
+- **Package Manager:** `pnpm` exclusively. Never run `npm` or `yarn`.
+- **TypeScript:** Strict mode enabled, zero `any`, use `unknown` with Zod parsing.
+- **Backend Access:** All ERP interactions strictly via `@fatturafacile/openapi-sdk`.
+- **Tenant Context:** Require `ExecutionContext` (`tenant`, `user`, `company`, `permissions`) on all operations.
+- **Verification Commands:**
+  - Build: `pnpm run build`
+  - Typecheck: `pnpm run typecheck`
+  - Lint: `pnpm run lint`
+  - Tests: `pnpm run test`
