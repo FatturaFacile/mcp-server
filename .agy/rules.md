@@ -1,9 +1,5 @@
-# Antigravity Rules — fatturafacile-mcp-server
+# Antigravity Rules
 
-Refer to [AGENTS.md](../AGENTS.md) for canonical architectural invariants, project layout, and quality commands.
+Follow [AGENTS.md](../AGENTS.md) as the single source of truth for stack, architecture, locales (`it`, `de`, `fr`, `en`), direct `dev` git workflow, and `pnpm` quality gates.
 
-## Core Directives
-- **Package Manager:** `pnpm` exclusively. Never execute `npm` or `yarn`.
-- **TypeScript Strict:** Strict mode enforced with zero `any`. Use `unknown` with Zod validation.
-- **Tenant Isolation:** Enforce multi-tenancy context `{ tenant, user, company, permissions }` on all operations.
-- **Verification:** Run `pnpm run typecheck`, `pnpm run lint`, and `pnpm run test` before completing tasks.
+- Antigravity override: enforce strict tenant isolation and verify `pnpm run lint && pnpm run build && pnpm test` before finalizing.
