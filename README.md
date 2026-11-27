@@ -1,128 +1,65 @@
-# fatturafacile-mcp-server
+# FatturaFacile MCP Server
 
-Official Model Context Protocol (MCP) AI Gateway for the Fattura Facile ERP ecosystem.
-
+[![CI](https://github.com/FatturaFacile/mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/FatturaFacile/mcp-server/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](<https://img.shields.io/badge/Node.js-LTS%20(%3E%3D22.x)-brightgreen>)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D22-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Mode-blue)](https://www.typescriptlang.org/)
-[![Package Manager](https://img.shields.io/badge/pnpm-12.x-orange)](https://pnpm.io/)
-[![Build & Tests](https://img.shields.io/badge/Tests-15%2F15%20Passed-brightgreen)](https://vitest.dev/)
+[![pnpm](https://img.shields.io/badge/pnpm-12.x-orange)](https://pnpm.io/)
 
----
+[Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for the [FatturaFacile](https://github.com/FatturaFacile/FatturaFacile) ERP. It lets MCP clients (for example Cursor, Windsurf and other desktop or editor clients) call the FatturaFacile API through tools, resources and prompts.
+
+> **Status: early stage.** The server starts, serves all the tools below and passes its test suite, but several services still return built-in sample data when the API call fails (see `src/services/`). Do not rely on it for real accounting data yet.
 
 ## Overview
 
-`fatturafacile-mcp-server` is an enterprise-grade AI Gateway enabling LLMs, Autonomous Agents, and Copilots to safely, reliably, and auditably interact with the Fattura Facile ERP backend via the standard [Model Context Protocol (MCP)](https://modelcontextprotocol.io).
+- **Tools (62):** customers, invoices, quotes, payments, products and services, companies and contacts, projects and tasks, files. Each tool validates its input with Zod and goes through a common framework (permission check, tracing, retries, caching, audit log).
+- **Resources (28):** read-only context such as `company://profile`, `customer://recent`, `invoice://overdue`, `dashboard://summary`.
+- **Prompts (20):** guided prompts for sales, customers, finance and reporting.
+- **Workflows (4):** multi-step flows with compensation on failure (customer onboarding with quote, quote-to-invoice conversion and dispatch, overdue invoice recovery, monthly executive report).
+- **Transports:** `stdio` (default) and HTTP (`streamable-http` or `sse`, served with Express on `/sse` and `/messages`, plus `/health`).
+- **Multi-tenancy:** every call carries a tenant, user and company context; cache keys and audit events are partitioned by tenant.
+- **Optional services:** Redis for the cache (an in-memory cache is used when Redis is not configured) and OpenTelemetry tracing.
 
-It exposes comprehensive ERP operations across invoicing, CRM, quotation, catalog management, payments, and analytics, backed by strict multi-tenancy isolation, role-based access control (RBAC), OpenTelemetry distributed tracing, Redis caching, and transactional multi-step workflows.
+## Requirements
 
----
+- Node.js 22 or later (`engines`: `>=22.0.0`)
+- pnpm 12 (pinned in `packageManager`)
+- Redis (optional)
+- A FatturaFacile API and an API key to talk to a real backend
 
-## Architectural Highlights
-
-- **OpenAPI Single Source of Truth:** All ERP communication is performed strictly via SDK client interfaces with no duplicate DTOs or handwritten HTTP models.
-- **Multi-Tenancy & Zero Leakage:** Every execution is scoped by explicit `TenantContext`, `UserContext`, `CompanyContext`, and `PermissionContext`. Cache keys and audit trails are completely partitioned.
-- **Unified Tool Framework:** Centralized lifecycle incorporating Zod schema validation, RBAC checks, OpenTelemetry spans, exponential backoff retries, structured error handling, and multi-tenant Redis caching.
-- **Pluggable MCP Transports:** Native support for `stdio`, `streamable-http`, and legacy `sse` transports.
-- **Agentic Workflow Engine:** Multi-step business workflows with automated compensation actions and transaction rollback support.
-- **Vendor-Neutral Semantic Search:** Abstracted vector storage and retrieval layer for future RAG and knowledge graph capabilities.
-
----
-
-## Capabilities Overview
-
-### 1. 39 MCP Tools (Actions)
-
-| Category                 | Available Tools                                                                                                                                                              |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Customers**            | `search_customer`, `get_customer`, `create_customer`, `update_customer`, `delete_customer`, `list_customers`                                                                 |
-| **Invoices**             | `search_invoice`, `get_invoice`, `create_invoice`, `update_invoice`, `delete_invoice`, `list_invoices`, `send_invoice`, `cancel_invoice`, `duplicate_invoice`                |
-| **Quotes**               | `search_quote`, `get_quote`, `create_quote`, `update_quote`, `delete_quote`, `list_quotes`, `convert_quote_to_invoice`                                                       |
-| **Payments**             | `search_payment`, `register_payment`, `refund_payment`, `list_payments`                                                                                                      |
-| **Products & Services**  | `search_product`, `get_product`, `create_product`, `update_product`, `list_products`, `search_service`, `get_service`, `create_service`, `update_service`, `list_services`   |
-| **Companies & Contacts** | `search_company`, `get_company`, `create_company`, `update_company`, `list_companies`, `search_contact`, `get_contact`, `create_contact`, `update_contact`, `list_contacts`  |
-| **Projects & Tasks**     | `search_project`, `get_project`, `create_project`, `update_project`, `list_projects`, `search_task`, `get_task`, `create_task`, `update_task`, `complete_task`, `list_tasks` |
-| **Files & Documents**    | `search_file`, `get_file`, `upload_file`, `download_file`, `list_files`                                                                                                      |
-
-### 2. 22 Dynamic MCP Resources (Context)
-
-- **Company:** `company://profile`, `company://settings`, `company://statistics`, `company://subscriptions`
-- **Customers:** `customer://recent`, `customer://top`, `customer://inactive`, `customer://vip`
-- **Products:** `product://catalog`, `product://top-selling`, `product://low-stock`
-- **Quotes:** `quote://recent`, `quote://drafts`, `quote://expiring`
-- **Invoices:** `invoice://latest`, `invoice://drafts`, `invoice://paid`, `invoice://overdue`, `invoice://unpaid`
-- **Payments:** `payment://recent`, `payment://reconciliation`
-- **Projects:** `project://recent`, `project://active`
-- **Dashboards:** `dashboard://summary`, `dashboard://sales`, `dashboard://customers`, `dashboard://cashflow`, `dashboard://invoices`
-
-### 3. 20 Pre-Engineered Prompts (Guided Interactions)
-
-- **Sales:** `CreateQuotePrompt`, `CreateInvoicePrompt`, `SendInvoicePrompt`, `InvoiceReminderPrompt`, `SalesSummaryPrompt`, `SalesForecastPrompt`, `RevenueAnalysisPrompt`
-- **Customers:** `CustomerLookupPrompt`, `CustomerAnalysisPrompt`, `CustomerRiskPrompt`, `CustomerHealthPrompt`
-- **Finance:** `FinancialOverviewPrompt`, `CashFlowPrompt`, `ProfitabilityPrompt`, `OverdueInvoicesPrompt`, `RevenueForecastPrompt`
-- **Productivity:** `DailySummaryPrompt`, `WeeklySummaryPrompt`, `ManagementReportPrompt`, `ExecutiveReportPrompt`
-
-### 4. Agentic Workflows
-
-- **Customer Onboarding & Quote Generation:** Multi-step client onboarding with automatic commercial quotation and compensation on failure.
-- **Quote-to-Invoice Conversion & Dispatch:** Converts accepted customer quotes to official invoices and automatically transmits them.
-- **Overdue Invoice Recovery:** Scans outstanding balances, calculates dunning terms, and dispatches compliant reminders.
-- **Monthly Executive Reporting:** Aggregates P&L metrics, cashflow projections, and customer health for board briefings.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js >= 22.x LTS
-- `pnpm` >= 9.x (v12 supported)
-- Redis (optional, in-memory cache fallback is active by default)
-
-### Installation
+## Getting started
 
 ```bash
-# Clone the repository
-git clone https://github.com/FatturaFacile/fatturafacile-mcp-server.git
-cd fatturafacile-mcp-server
-
-# Install dependencies
+git clone https://github.com/FatturaFacile/mcp-server.git
+cd mcp-server
 pnpm install --frozen-lockfile
-
-# Configure environment
 cp .env.example .env
+
+pnpm run dev        # development with hot reload (stdio)
+pnpm run build      # compile to dist/
+pnpm start          # run the compiled server (stdio by default)
+
+# HTTP transport on port 3000
+MCP_TRANSPORT=streamable-http PORT=3000 pnpm start
+curl http://localhost:3000/health
 ```
 
-### Running the Server
+With Docker (builds the image and starts it together with Redis):
 
 ```bash
-# Development mode with hot-reload
-pnpm run dev
-
-# Compile TypeScript to dist/
-pnpm run build
-
-# Start production server (stdio by default)
-pnpm start
-
-# Start with Streamable HTTP / SSE transport on port 3000
-MCP_TRANSPORT=streamable-http PORT=3000 pnpm start
+docker compose up --build -d
 ```
 
----
+### Client configuration
 
-## Client Integration Examples
-
-### Claude Desktop
-
-Add to your `claude_desktop_config.json`:
+Clients such as Cursor (`.cursor/mcp.json`) and Windsurf (`mcp_config.json`) use this shape in their MCP configuration file:
 
 ```json
 {
   "mcpServers": {
-    "fattura-facile": {
+    "fatturafacile": {
       "command": "node",
-      "args": ["C:/dev/fattura-facile/mcp-server/dist/index.js"],
+      "args": ["/path/to/mcp-server/dist/index.js"],
       "env": {
         "MCP_TRANSPORT": "stdio",
         "FATTURA_FACILE_API_URL": "https://api.fatturafacile.eu",
@@ -133,68 +70,69 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-### Cursor & Windsurf
+See [docs/client-integration.md](docs/client-integration.md) for more.
 
-In `.cursor/mcp.json` or Windsurf's `mcp_config.json`:
+## Configuration
 
-```json
-{
-  "mcpServers": {
-    "fattura-facile": {
-      "command": "node",
-      "args": ["C:/dev/fattura-facile/mcp-server/dist/index.js"],
-      "env": {
-        "MCP_TRANSPORT": "stdio"
-      }
-    }
-  }
-}
-```
+Environment variables, validated at startup in `src/config/environment.ts` (defaults and descriptions in [docs/deployment-guide.md](docs/deployment-guide.md)); `.env.example` lists them all:
 
----
+`NODE_ENV`, `PORT`, `HOST`, `LOG_LEVEL`, `MCP_TRANSPORT`, `FATTURA_FACILE_API_URL`, `FATTURA_FACILE_API_KEY`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DB`, `CACHE_TTL_SECONDS`, `API_KEY_HEADER`, `JWT_SECRET`, `RATE_LIMIT_MAX_REQUESTS`, `RATE_LIMIT_WINDOW_MS`, `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT`.
 
-## Testing & Quality Assurance
+Set `JWT_SECRET` and `FATTURA_FACILE_API_KEY` explicitly outside local development.
+
+## Testing and linting
 
 ```bash
-# Run unit and integration tests (Vitest)
-pnpm test
-
-# Run tests with code coverage
-pnpm run test:coverage
-
-# Typecheck with TypeScript strict mode
-pnpm run typecheck
-
-# Code linting
-pnpm run lint
-
-# Code style check
-pnpm run format:check
+pnpm test               # unit and integration tests (Vitest)
+pnpm run test:coverage  # with coverage
+pnpm run test:e2e       # transport end-to-end tests (Playwright; run `pnpm exec playwright install` once)
+pnpm run typecheck      # tsc --noEmit
+pnpm run lint           # ESLint
+pnpm run format:check   # Prettier
 ```
 
----
+## CI/CD and branching
 
-## Docker Deployment
+- `dev` is the default branch. Open pull requests against `dev`. Production is released from `main` with a GitHub release.
+- `CI` (`ci.yml`) runs on pull requests and pushes to `main`: typecheck, lint, tests with coverage, build, Playwright tests and Qodana.
+- `Deploy dev` (`deploy-dev.yml`) runs the CI and, when dev deployment is enabled for the repository, deploys the build on every push to `dev`.
+- `Release Assets` (`deploy.yml`) runs the CI when a GitHub release is published and attaches the build archives and checksums to the release.
 
-```bash
-# Build and run containerized server with Redis
-docker-compose up --build -d
+## Project structure
 
-# Check service health
-curl http://localhost:3000/health
+```text
+src/
+├── index.ts          # entry point
+├── config/           # environment validation
+├── server/           # MCP server wiring
+├── transport/        # stdio, streamable-http and SSE transports
+├── tools/            # tool framework (base/) and tools by domain
+├── resources/        # MCP resources
+├── prompts/          # MCP prompts
+├── workflows/        # workflow engine and definitions
+├── services/         # domain services that call the API
+├── sdk/              # HTTP client for the FatturaFacile API
+├── auth/, permissions/, security/   # authentication, RBAC, rate limiting
+├── cache/, queue/, search/, audit/, telemetry/, errors/, types/
+tests/                # unit/, integration/, e2e/
+docs/                 # architecture, domain model, MCP concepts, deployment, security
+examples/             # client usage examples
 ```
 
----
+## Related repositories
+
+| Repository                                                        | Relation                                               |
+| :---------------------------------------------------------------- | :----------------------------------------------------- |
+| [`web-api`](https://github.com/FatturaFacile/web-api)             | The Laravel API this server calls                      |
+| [`openapi-sdk`](https://github.com/FatturaFacile/openapi-sdk)     | OpenAPI specification and client SDKs for the same API |
+| [`integrations`](https://github.com/FatturaFacile/integrations)   | Connectors to third-party platforms                    |
+| [`FatturaFacile`](https://github.com/FatturaFacile/FatturaFacile) | Organization overview and repository map               |
 
 ## Documentation
 
-- [Architecture Specification](docs/architecture/ARCHITECTURE.md)
-- [Domain Model Reference](docs/domain-model.md)
-- [MCP Concepts Guide](docs/mcp-concepts.md)
-- [Client Integration Guide](docs/client-integration.md)
-
----
+- [Architecture](docs/architecture/ARCHITECTURE.md), [domain model](docs/domain-model.md), [MCP concepts](docs/mcp-concepts.md), [security model](docs/security-model.md), [deployment guide](docs/deployment-guide.md), [client integration](docs/client-integration.md)
+- Project wiki: [FatturaFacile/FatturaFacile wiki](https://github.com/FatturaFacile/FatturaFacile/wiki)
 
 ## License
 
-This project is open-source software licensed under the [MIT License](LICENSE).
+[MIT](LICENSE)
